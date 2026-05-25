@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.PortablePOS" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#1565C0</item>
+        <item name="android:navigationBarColor">#1565C0</item>
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+
+    <style name="Theme.PortablePOS.Splash" parent="Theme.PortablePOS">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+</resources>
