@@ -109,8 +109,7 @@ fun BarcodeScannerScreen(
         viewModel.navigation.collect { navEvent ->
             when (navEvent) {
                 is ScannerNavigation.NavigateToAddProduct -> {
-                    navController.previousBackStackEntry?.savedStateHandle?.set("scanned_barcode", navEvent.barcode)
-                    navController.popBackStack()
+                    navController.navigate(Screen.AddProduct.createRoute(navEvent.barcode))
                 }
                 is ScannerNavigation.BarcodeExists -> {
                     Toast.makeText(context, "Barcode already exists", Toast.LENGTH_SHORT).show()
