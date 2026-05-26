@@ -27,6 +27,8 @@ import dev.ml.portablepos.presentation.saleshistory.SaleDetailScreen
 import dev.ml.portablepos.presentation.saleshistory.SalesHistoryScreen
 import dev.ml.portablepos.presentation.scanner.BarcodeScannerScreen
 import dev.ml.portablepos.presentation.settings.SettingsScreen
+import dev.ml.portablepos.presentation.returns.ReturnHistoryScreen
+import dev.ml.portablepos.presentation.returns.ReturnScreen
 import dev.ml.portablepos.presentation.splash.SplashScreen
 
 @Composable
@@ -167,6 +169,25 @@ fun NavGraph(navController: NavHostController) {
                     navController = navController,
                     productId = productId
                 )
+            }
+
+            composable(
+                route = Screen.Return.route,
+                arguments = listOf(
+                    navArgument("saleId") {
+                        type = NavType.LongType
+                    }
+                )
+            ) { backStackEntry ->
+                val saleId = backStackEntry.arguments?.getLong("saleId") ?: 0L
+                ReturnScreen(
+                    navController = navController,
+                    saleId = saleId
+                )
+            }
+
+            composable(Screen.ReturnHistory.route) {
+                ReturnHistoryScreen(navController = navController)
             }
 
             composable(Screen.Reports.route) {

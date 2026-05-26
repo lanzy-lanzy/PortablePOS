@@ -6,6 +6,7 @@ data class ReturnRecord(
     val refundAmount: Double,
     val reason: String = "",
     val processedBy: String = "Cashier",
+    val isFullReturn: Boolean = false,
     val returnedItemsJson: String = "[]",
     val createdAt: Long = System.currentTimeMillis()
 )

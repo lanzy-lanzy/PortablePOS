@@ -48,6 +48,9 @@ interface SaleDao {
     @Query("SELECT COALESCE(SUM(subtotal), 0) FROM sales WHERE created_at BETWEEN :todayStart AND :todayEnd")
     fun getTotalGrossSales(todayStart: Long, todayEnd: Long): Flow<Double>
 
+    @Query("SELECT COALESCE(SUM(refunded_amount), 0) FROM sales WHERE created_at BETWEEN :todayStart AND :todayEnd")
+    fun getTotalReturns(todayStart: Long, todayEnd: Long): Flow<Double>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSale(sale: SaleEntity): Long
 

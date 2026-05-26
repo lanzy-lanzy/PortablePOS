@@ -10,6 +10,7 @@ fun ReturnRecordEntity.toDomainModel(): ReturnRecord {
         refundAmount = refundAmount,
         reason = reason,
         processedBy = processedBy,
+        isFullReturn = isFullReturn,
         returnedItemsJson = returnedItemsJson,
         createdAt = createdAt
     )
@@ -22,6 +23,7 @@ fun ReturnRecord.toEntity(): ReturnRecordEntity {
         refundAmount = refundAmount,
         reason = reason,
         processedBy = processedBy,
+        isFullReturn = isFullReturn,
         returnedItemsJson = returnedItemsJson,
         createdAt = createdAt
     )

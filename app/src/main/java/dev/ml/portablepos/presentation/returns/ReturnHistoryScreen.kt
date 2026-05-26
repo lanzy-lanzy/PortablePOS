@@ -43,6 +43,8 @@ import dev.ml.portablepos.presentation.components.EmptyState
 import dev.ml.portablepos.presentation.components.LoadingIndicator
 import dev.ml.portablepos.ui.theme.OutOfStockRed
 import dev.ml.portablepos.ui.theme.PrimaryBlue
+import dev.ml.portablepos.ui.theme.SuccessGreen
+import dev.ml.portablepos.ui.theme.WarningOrange
 import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -128,6 +130,9 @@ private fun ReturnRecordCard(record: dev.ml.portablepos.domain.model.ReturnRecor
         JSONArray(record.returnedItemsJson).length()
     } catch (_: Exception) { 0 }
 
+    val badgeColor = if (record.isFullReturn) SuccessGreen else WarningOrange
+    val badgeText = if (record.isFullReturn) "Full Return" else "Partial Return"
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -161,11 +166,26 @@ private fun ReturnRecordCard(record: dev.ml.portablepos.domain.model.ReturnRecor
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = dateFormat.format(Date(record.createdAt)),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = dateFormat.format(Date(record.createdAt)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                Box(
+                    modifier = Modifier
+                        .background(badgeColor.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = badgeText,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = badgeColor
+                    )
+                }
+            }
             if (record.reason.isNotBlank()) {
                 Text(
                     text = "Reason: ${record.reason}",

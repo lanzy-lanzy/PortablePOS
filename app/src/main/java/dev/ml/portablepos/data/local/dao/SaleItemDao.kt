@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import dev.ml.portablepos.data.local.entity.SaleItemEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -22,6 +23,9 @@ interface SaleItemDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSaleItems(items: List<SaleItemEntity>)
+
+    @Update
+    suspend fun updateSaleItem(saleItem: SaleItemEntity)
 
     @Delete
     suspend fun deleteSaleItem(saleItem: SaleItemEntity)

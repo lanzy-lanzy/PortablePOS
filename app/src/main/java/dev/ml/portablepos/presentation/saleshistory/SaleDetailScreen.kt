@@ -19,8 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -202,6 +204,26 @@ fun SaleDetailScreen(
                             Icon(Icons.Default.Receipt, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("View Receipt", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    val allReturned = uiState.saleItems.all { it.refundedQuantity >= it.quantity }
+
+                    if (!allReturned) {
+                        item {
+                            OutlinedButton(
+                                onClick = {
+                                    navController.navigate(Screen.Return.createRoute(sale.id))
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Return Items", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
 

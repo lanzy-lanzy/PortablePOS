@@ -19,6 +19,7 @@ interface SaleRepository {
     fun getTotalSalesThisMonth(monthStart: Long, monthEnd: Long): Flow<Double>
     fun getTotalDiscounts(todayStart: Long, todayEnd: Long): Flow<Double>
     fun getTotalGrossSales(todayStart: Long, todayEnd: Long): Flow<Double>
+    fun getTotalReturns(todayStart: Long, todayEnd: Long): Flow<Double>
     suspend fun insertSale(sale: Sale): Long
     suspend fun updateSale(sale: Sale)
     suspend fun deleteSale(sale: Sale)

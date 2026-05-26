@@ -29,7 +29,7 @@ import dev.ml.portablepos.data.local.entity.StockMovementEntity
         CashierEntity::class,
         ReturnRecordEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -54,7 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "portable_pos_database"
                 )
                     .addCallback(DatabaseCallback())
-                    .fallbackToDestructiveMigration(false)
+                    .fallbackToDestructiveMigration(true)
                     .build()
                 INSTANCE = instance
                 instance

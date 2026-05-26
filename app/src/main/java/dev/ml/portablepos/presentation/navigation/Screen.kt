@@ -27,5 +27,9 @@ sealed class Screen(val route: String) {
         fun createRoute(productId: Long) = "stock_adjustment/$productId"
     }
     object Reports : Screen("reports")
+    object Return : Screen("return/{saleId}") {
+        fun createRoute(saleId: Long) = "return/$saleId"
+    }
+    object ReturnHistory : Screen("return_history")
     object Settings : Screen("settings")
 }

@@ -61,6 +61,9 @@ class SaleRepositoryImpl @Inject constructor(
     override fun getTotalGrossSales(todayStart: Long, todayEnd: Long): Flow<Double> =
         saleDao.getTotalGrossSales(todayStart, todayEnd)
 
+    override fun getTotalReturns(todayStart: Long, todayEnd: Long): Flow<Double> =
+        saleDao.getTotalReturns(todayStart, todayEnd)
+
     override suspend fun insertSale(sale: Sale): Long =
         saleDao.insertSale(sale.toEntity())
 
@@ -101,25 +104,39 @@ class SaleRepositoryImpl @Inject constructor(
 
     override suspend fun processReturn(saleId: Long, items: List<ItemReturnInput>, reason: String): Long {
         val totalRefund = items.sumOf { it.refundAmount }
+
+        val saleItemEntities = saleItemDao.getItemsBySaleId(saleId).first()
+        for (input in items) {
+            val entity = saleItemEntities.find { it.productId == input.productId } ?: continue
+            saleItemDao.updateSaleItem(entity.copy(refundedQuantity = entity.refundedQuantity + input.quantity))
+
+            val product = productDao.getProductByIdOnce(input.productId) ?: continue
+            productDao.updateStock(input.productId, product.stockQuantity + input.quantity)
+        }
+
+        val updatedItems = saleItemDao.getItemsBySaleId(saleId).first()
+        val isFullReturn = updatedItems.all { it.refundedQuantity >= it.quantity }
+
+        val jsonArray = org.json.JSONArray()
+        items.forEach { input ->
+            val obj = org.json.JSONObject()
+            obj.put("productId", input.productId)
+            obj.put("quantity", input.quantity)
+            obj.put("refundAmount", input.refundAmount)
+            jsonArray.put(obj)
+        }
+
         val record = dev.ml.portablepos.data.local.entity.ReturnRecordEntity(
             saleId = saleId,
             refundAmount = totalRefund,
             reason = reason,
-            returnedItemsJson = items.toString()
+            isFullReturn = isFullReturn,
+            returnedItemsJson = jsonArray.toString()
         )
         val recordId = returnRecordDao.insert(record)
 
         val sale = saleDao.getSaleById(saleId) ?: return recordId
         saleDao.updateSale(sale.copy(refundedAmount = sale.refundedAmount + totalRefund))
-
-        val saleItemEntities = saleItemDao.getItemsBySaleId(saleId).first()
-        for (input in items) {
-            val entity = saleItemEntities.find { it.productId == input.productId } ?: continue
-            saleItemDao.insertSaleItem(entity.copy(refundedQuantity = entity.refundedQuantity + input.quantity))
-
-            val product = productDao.getProductByIdOnce(input.productId) ?: continue
-            productDao.updateStock(input.productId, product.stockQuantity + input.quantity)
-        }
 
         return recordId
     }

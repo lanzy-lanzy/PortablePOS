@@ -103,6 +103,20 @@ class AddEditProductViewModel @Inject constructor(
         }
     }
 
+    fun createCategory(name: String): Boolean {
+        var success = false
+        viewModelScope.launch {
+            try {
+                val now = System.currentTimeMillis()
+                val category = Category(name = name.trim(), createdAt = now, updatedAt = now)
+                val id = categoryRepository.insert(category)
+                _uiState.value = _uiState.value.copy(categoryId = id)
+                success = true
+            } catch (_: Exception) { }
+        }
+        return success
+    }
+
     fun onNameChange(value: String) {
         _uiState.value = _uiState.value.copy(name = value, nameError = null)
     }

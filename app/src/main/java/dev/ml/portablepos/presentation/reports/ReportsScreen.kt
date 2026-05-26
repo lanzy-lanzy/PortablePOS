@@ -411,6 +411,25 @@ private fun SummaryGrid(reportData: dev.ml.portablepos.domain.usecase.SalesRepor
                 modifier = Modifier.weight(1f)
             )
         }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            SummaryCard(
+                title = "Returns",
+                value = "${formatAmount(reportData.todayReturns)}",
+                icon = Icons.Default.Inventory2,
+                gradientColors = listOf(Color(0xFFE65100), Color(0xFFFF9800)),
+                modifier = Modifier.weight(1f)
+            )
+            SummaryCard(
+                title = "Net Income",
+                value = "${formatAmount(reportData.netIncome)}",
+                icon = Icons.Default.AttachMoney,
+                gradientColors = listOf(Color(0xFF2E7D32), Color(0xFF4CAF50)),
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 

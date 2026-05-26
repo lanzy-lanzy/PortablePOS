@@ -32,6 +32,8 @@ data class ReturnRecordEntity(
     val processedBy: String = "Cashier",
     @ColumnInfo(name = "returned_items_json")
     val returnedItemsJson: String = "[]",
+    @ColumnInfo(name = "is_full_return")
+    val isFullReturn: Boolean = false,
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis()
 )

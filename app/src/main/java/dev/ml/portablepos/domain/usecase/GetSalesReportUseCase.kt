@@ -12,7 +12,9 @@ data class SalesReportData(
     val thisMonthSales: Double = 0.0,
     val todayTransactionCount: Int = 0,
     val todayDiscounts: Double = 0.0,
-    val todayGrossSales: Double = 0.0
+    val todayGrossSales: Double = 0.0,
+    val todayReturns: Double = 0.0,
+    val netIncome: Double = 0.0
 )
 
 class GetSalesReportUseCase @Inject constructor(
@@ -36,6 +38,7 @@ class GetSalesReportUseCase @Inject constructor(
         val transactionCountFlow = saleRepository.getTransactionCountToday(todayStart, todayEnd)
         val discountsFlow = saleRepository.getTotalDiscounts(todayStart, todayEnd)
         val grossSalesFlow = saleRepository.getTotalGrossSales(todayStart, todayEnd)
+        val returnsFlow = saleRepository.getTotalReturns(todayStart, todayEnd)
 
         return combine(
             todaySalesFlow,
@@ -43,15 +46,21 @@ class GetSalesReportUseCase @Inject constructor(
             monthSalesFlow,
             transactionCountFlow,
             discountsFlow,
-            grossSalesFlow
+            grossSalesFlow,
+            returnsFlow
         ) { values: Array<out Any?> ->
+            val gross = values[5] as Double
+            val discounts = values[4] as Double
+            val returns = values[6] as Double
             SalesReportData(
                 todaySales = values[0] as Double,
                 thisWeekSales = values[1] as Double,
                 thisMonthSales = values[2] as Double,
                 todayTransactionCount = values[3] as Int,
-                todayDiscounts = values[4] as Double,
-                todayGrossSales = values[5] as Double
+                todayDiscounts = discounts,
+                todayGrossSales = gross,
+                todayReturns = returns,
+                netIncome = gross - discounts - returns
             )
         }
     }
