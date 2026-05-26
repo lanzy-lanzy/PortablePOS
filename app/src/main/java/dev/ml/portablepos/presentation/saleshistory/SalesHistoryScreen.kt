@@ -67,6 +67,7 @@ import dev.ml.portablepos.presentation.components.LoadingIndicator
 import dev.ml.portablepos.presentation.navigation.Screen
 import dev.ml.portablepos.ui.theme.PrimaryBlue
 import dev.ml.portablepos.ui.theme.SuccessGreen
+import dev.ml.portablepos.ui.theme.WarningOrange
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -286,6 +287,7 @@ fun SalesHistoryScreen(
 
 @Composable
 private fun SaleCard(sale: Sale, onClick: () -> Unit) {
+    val hasReturns = sale.refundedAmount > 0
     val paymentColors = mapOf(
         "Cash" to SuccessGreen,
         "Card" to PrimaryBlue,
@@ -310,7 +312,8 @@ private fun SaleCard(sale: Sale, onClick: () -> Unit) {
                     .clip(RoundedCornerShape(topEnd = 0.dp, bottomEnd = 0.dp))
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(PrimaryBlue, Color(0xFF42A5F5))
+                            colors = if (hasReturns) listOf(WarningOrange, Color(0xFFFFB74D))
+                            else listOf(PrimaryBlue, Color(0xFF42A5F5))
                         )
                     )
             )
@@ -351,20 +354,40 @@ private fun SaleCard(sale: Sale, onClick: () -> Unit) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = payColor.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(6.dp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (hasReturns) {
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        color = WarningOrange.copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(6.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = "Returned ${formatAmount(sale.refundedAmount)}",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = WarningOrange
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                        }
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = payColor.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(6.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = sale.paymentMethod,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                fontWeight = FontWeight.SemiBold,
+                                color = payColor
                             )
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                    ) {
-                        Text(
-                            text = sale.paymentMethod,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                            fontWeight = FontWeight.SemiBold,
-                            color = payColor
-                        )
+                        }
                     }
                 }
             }
