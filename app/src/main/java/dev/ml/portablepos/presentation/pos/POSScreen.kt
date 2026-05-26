@@ -34,7 +34,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -90,6 +91,17 @@ fun POSScreen(
 
     Scaffold(
         containerColor = Color(0xFFF0F2F5),
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.Scanner.createRoute("SALE")) },
+                containerColor = PrimaryBlue,
+                contentColor = Color.White,
+                shape = CircleShape,
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+            ) {
+                Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan Barcode")
+            }
+        },
         topBar = {
             Box(
                 modifier = Modifier
@@ -150,6 +162,7 @@ fun POSScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(bottom = 80.dp)
         ) {
             Card(
                 modifier = Modifier
@@ -490,20 +503,7 @@ fun POSScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
 
-                        OutlinedButton(
-                            onClick = { navController.navigate(Screen.Scanner.createRoute("SALE")) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue)
-                        ) {
-                            Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan", modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Scan Barcode", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium))
-                        }
                     }
                 }
             }
