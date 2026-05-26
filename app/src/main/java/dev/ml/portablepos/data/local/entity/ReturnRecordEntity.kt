@@ -7,7 +7,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "sale_items",
+    tableName = "return_records",
     foreignKeys = [
         ForeignKey(
             entity = SaleEntity::class,
@@ -20,21 +20,18 @@ import androidx.room.PrimaryKey
         Index(value = ["sale_id"])
     ]
 )
-data class SaleItemEntity(
+data class ReturnRecordEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     @ColumnInfo(name = "sale_id")
     val saleId: Long,
-    @ColumnInfo(name = "product_id")
-    val productId: Long,
-    @ColumnInfo(name = "product_name")
-    val productName: String,
-    val barcode: String? = null,
-    val quantity: Int,
-    @ColumnInfo(name = "unit_price")
-    val unitPrice: Double,
-    @ColumnInfo(name = "total_price")
-    val totalPrice: Double,
-    @ColumnInfo(name = "refunded_quantity")
-    val refundedQuantity: Int = 0
+    @ColumnInfo(name = "refund_amount")
+    val refundAmount: Double,
+    val reason: String = "",
+    @ColumnInfo(name = "processed_by")
+    val processedBy: String = "Cashier",
+    @ColumnInfo(name = "returned_items_json")
+    val returnedItemsJson: String = "[]",
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis()
 )

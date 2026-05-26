@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.pos
+import dev.ml.portablepos.util.formatAmount
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -359,7 +360,7 @@ fun POSScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                "Subtotal: ₱${String.format("%.2f", subtotal)}",
+                                "Subtotal: ${formatAmount(subtotal)}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -439,7 +440,7 @@ fun POSScreen(
                                     color = Color(0xFFEF5350)
                                 )
                                 Text(
-                                    "-₱${String.format("%.2f", discount)}",
+                                    "-${formatAmount(discount)}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = Color(0xFFEF5350)
@@ -459,7 +460,7 @@ fun POSScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "₱${String.format("%.2f", grandTotal)}",
+                                "${formatAmount(grandTotal)}",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontSize = 28.sp),
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryBlue
@@ -484,7 +485,7 @@ fun POSScreen(
                             Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "Checkout — ₱${String.format("%.2f", grandTotal)}",
+                                "Checkout — ${formatAmount(grandTotal)}",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -559,7 +560,7 @@ private fun ProductSearchItem(
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "₱${String.format("%.2f", product.sellingPrice)}",
+                    text = "${formatAmount(product.sellingPrice)}",
                     style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
                     fontWeight = FontWeight.Bold,
                     color = PrimaryBlue
@@ -622,7 +623,7 @@ private fun CompactCartItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "₱${String.format("%.2f", item.product.sellingPrice)} each",
+                    text = "${formatAmount(item.product.sellingPrice)} each",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -663,7 +664,7 @@ private fun CompactCartItem(
             Spacer(modifier = Modifier.width(10.dp))
 
             Text(
-                text = "₱${String.format("%.2f", item.subtotal)}",
+                text = "${formatAmount(item.subtotal)}",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryBlue

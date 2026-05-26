@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.inventory
+import dev.ml.portablepos.util.formatAmount
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -405,7 +406,7 @@ private fun InventoryProductCard(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "₱${String.format("%.2f", product.sellingPrice)}",
+                            text = "${formatAmount(product.sellingPrice)}",
                             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
                             fontWeight = FontWeight.Bold,
                             color = PrimaryBlue
@@ -413,7 +414,7 @@ private fun InventoryProductCard(
                         if (product.costPrice > 0) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Cost: ₱${String.format("%.2f", product.costPrice)}",
+                                text = "Cost: ${formatAmount(product.costPrice)}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

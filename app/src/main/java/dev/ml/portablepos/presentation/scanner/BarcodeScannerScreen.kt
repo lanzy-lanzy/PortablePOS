@@ -18,16 +18,23 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -54,6 +62,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -63,6 +72,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import dev.ml.portablepos.domain.model.ScannerMode
 import dev.ml.portablepos.presentation.navigation.Screen
+import kotlinx.coroutines.delay
 import java.util.concurrent.Executors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -157,6 +167,14 @@ fun BarcodeScannerScreen(
         )
     }
 
+    // Auto-dismiss product-added confirmation after 1.5s
+    if (uiState.lastAddedProductName != null) {
+        LaunchedEffect(uiState.lastAddedProductName) {
+            delay(1500)
+            viewModel.clearLastAddedProduct()
+        }
+    }
+
     if (!hasCameraPermission) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -175,11 +193,13 @@ fun BarcodeScannerScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         CameraPreview(
             onBarcodeScanned = { barcode ->
-                viewModel.processBarcode(barcode)
-                try {
-                    playBeepSound(context)
-                    vibrateDevice(context)
-                } catch (_: Exception) { }
+                if (!viewModel.isDuplicateScan(barcode)) {
+                    viewModel.processBarcode(barcode)
+                    try {
+                        playBeepSound(context)
+                        vibrateDevice(context)
+                    } catch (_: Exception) { }
+                }
             }
         )
 
@@ -228,11 +248,70 @@ fun BarcodeScannerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(padding)
-                    .padding(bottom = 48.dp)
+                    .padding(bottom = 80.dp)
                     .align(Alignment.BottomCenter)
                     .padding(horizontal = 32.dp),
                 textAlign = TextAlign.Center
             )
+        }
+
+        if (uiState.lastAddedProductName != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 160.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        color = Color(0xFF4CAF50),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = " ${uiState.lastAddedProductName} added to cart",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+
+        if (viewModel.scanMode == ScannerMode.SALE && uiState.totalCartItems > 0) {
+            Button(
+                onClick = { viewModel.doneScanning() },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 24.dp, bottom = 24.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF1565C0)
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+            ) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = " Done (${uiState.totalCartItems})",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

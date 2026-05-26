@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.components
+import dev.ml.portablepos.util.formatAmount
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -140,7 +141,7 @@ fun ProductCard(
                     )
                 }
                 Text(
-                    text = "PHP ${String.format("%.2f", product.sellingPrice)}",
+                    text = "${formatAmount(product.sellingPrice)}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = PrimaryBlue

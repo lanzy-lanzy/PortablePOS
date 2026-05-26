@@ -30,6 +30,8 @@ data class SaleEntity(
     val changeAmount: Double = 0.0,
     @ColumnInfo(name = "payment_method")
     val paymentMethod: String = "Cash",
+    @ColumnInfo(name = "refunded_amount")
+    val refundedAmount: Double = 0.0,
     val status: String = "COMPLETED",
     @ColumnInfo(name = "sync_status")
     val syncStatus: String = "SYNCED",

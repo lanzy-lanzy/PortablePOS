@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.receipt
+import dev.ml.portablepos.util.formatAmount
 
 import android.content.Context
 import android.content.Intent
@@ -162,8 +163,8 @@ fun ReceiptScreen(
                                 ) {
                                     Text(item.productName, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(2f))
                                     Text("${item.quantity}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(0.5f), textAlign = TextAlign.End)
-                                    Text("₱${String.format("%.2f", item.unitPrice)}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
-                                    Text("₱${String.format("%.2f", item.totalPrice)}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f), textAlign = TextAlign.End, fontWeight = FontWeight.Bold)
+                                    Text("${formatAmount(item.unitPrice)}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
+                                    Text("${formatAmount(item.totalPrice)}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f), textAlign = TextAlign.End, fontWeight = FontWeight.Bold)
                                 }
                             }
 
@@ -177,7 +178,7 @@ fun ReceiptScreen(
                             ) {
                                 Text("Subtotal:", style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    "₱${String.format("%.2f", sale.subtotal)}",
+                                    "${formatAmount(sale.subtotal)}",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -190,7 +191,7 @@ fun ReceiptScreen(
                             ) {
                                 Text("Discount:", style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    "-₱${String.format("%.2f", sale.discount)}",
+                                    "-${formatAmount(sale.discount)}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.error
                                 )
@@ -208,7 +209,7 @@ fun ReceiptScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    "₱${String.format("%.2f", sale.totalAmount)}",
+                                    "${formatAmount(sale.totalAmount)}",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryBlue
@@ -223,7 +224,7 @@ fun ReceiptScreen(
                             ) {
                                 Text("Cash:", style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    "₱${String.format("%.2f", sale.cashReceived)}",
+                                    "${formatAmount(sale.cashReceived)}",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -234,7 +235,7 @@ fun ReceiptScreen(
                             ) {
                                 Text("Change:", style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    "₱${String.format("%.2f", sale.changeAmount)}",
+                                    "${formatAmount(sale.changeAmount)}",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -318,11 +319,11 @@ private fun shareReceipt(context: Context, sale: dev.ml.portablepos.domain.model
         appendLine("PortablePOS")
         appendLine(sale.transactionNumber)
         appendLine()
-        appendLine("Subtotal: ₱${String.format("%.2f", sale.subtotal)}")
-        appendLine("Discount: ₱${String.format("%.2f", sale.discount)}")
-        appendLine("Total: ₱${String.format("%.2f", sale.totalAmount)}")
-        appendLine("Cash: ₱${String.format("%.2f", sale.cashReceived)}")
-        appendLine("Change: ₱${String.format("%.2f", sale.changeAmount)}")
+        appendLine("Subtotal: ${formatAmount(sale.subtotal)}")
+        appendLine("Discount: ${formatAmount(sale.discount)}")
+        appendLine("Total: ${formatAmount(sale.totalAmount)}")
+        appendLine("Cash: ${formatAmount(sale.cashReceived)}")
+        appendLine("Change: ${formatAmount(sale.changeAmount)}")
         appendLine()
         appendLine("Thank you for your purchase!")
     }

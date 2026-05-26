@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.saleshistory
+import dev.ml.portablepos.util.formatAmount
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -171,18 +172,18 @@ fun SaleDetailScreen(
                             colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                DetailRow("Subtotal", "₱${String.format("%.2f", sale.subtotal)}")
+                                DetailRow("Subtotal", "${formatAmount(sale.subtotal)}")
                                 if (sale.discount > 0) {
-                                    DetailRow("Discount", "-₱${String.format("%.2f", sale.discount)}", valueColor = Color(0xFFEF5350))
+                                    DetailRow("Discount", "-${formatAmount(sale.discount)}", valueColor = Color(0xFFEF5350))
                                 }
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = 8.dp),
                                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                                 )
-                                DetailRow("Grand Total", "₱${String.format("%.2f", sale.totalAmount)}", isBold = true)
+                                DetailRow("Grand Total", "${formatAmount(sale.totalAmount)}", isBold = true)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                DetailRow("Cash Received", "₱${String.format("%.2f", sale.cashReceived)}")
-                                DetailRow("Change", "₱${String.format("%.2f", sale.changeAmount)}")
+                                DetailRow("Cash Received", "${formatAmount(sale.cashReceived)}")
+                                DetailRow("Change", "${formatAmount(sale.changeAmount)}")
                             }
                         }
                     }
@@ -269,13 +270,13 @@ private fun SaleItemRow(item: SaleItem) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${item.quantity} × ₱${String.format("%.2f", item.unitPrice)}",
+                    text = "${item.quantity} × ${formatAmount(item.unitPrice)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Text(
-                text = "₱${String.format("%.2f", item.totalPrice)}",
+                text = "${formatAmount(item.totalPrice)}",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryBlue

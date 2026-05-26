@@ -12,7 +12,8 @@ fun SaleItemEntity.toDomainModel(): SaleItem {
         barcode = barcode,
         quantity = quantity,
         unitPrice = unitPrice,
-        totalPrice = totalPrice
+        totalPrice = totalPrice,
+        refundedQuantity = refundedQuantity
     )
 }
 
@@ -25,6 +26,7 @@ fun SaleItem.toEntity(): SaleItemEntity {
         barcode = barcode,
         quantity = quantity,
         unitPrice = unitPrice,
-        totalPrice = totalPrice
+        totalPrice = totalPrice,
+        refundedQuantity = refundedQuantity
     )
 }

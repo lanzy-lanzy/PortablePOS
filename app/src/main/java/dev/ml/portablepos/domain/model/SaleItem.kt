@@ -8,5 +8,6 @@ data class SaleItem(
     val barcode: String? = null,
     val quantity: Int,
     val unitPrice: Double,
-    val totalPrice: Double
+    val totalPrice: Double,
+    val refundedQuantity: Int = 0
 )

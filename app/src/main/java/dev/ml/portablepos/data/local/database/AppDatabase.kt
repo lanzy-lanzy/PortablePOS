@@ -7,12 +7,14 @@ import androidx.room.RoomDatabase
 import dev.ml.portablepos.data.local.dao.CashierDao
 import dev.ml.portablepos.data.local.dao.CategoryDao
 import dev.ml.portablepos.data.local.dao.ProductDao
+import dev.ml.portablepos.data.local.dao.ReturnRecordDao
 import dev.ml.portablepos.data.local.dao.SaleDao
 import dev.ml.portablepos.data.local.dao.SaleItemDao
 import dev.ml.portablepos.data.local.dao.StockMovementDao
 import dev.ml.portablepos.data.local.entity.CashierEntity
 import dev.ml.portablepos.data.local.entity.CategoryEntity
 import dev.ml.portablepos.data.local.entity.ProductEntity
+import dev.ml.portablepos.data.local.entity.ReturnRecordEntity
 import dev.ml.portablepos.data.local.entity.SaleEntity
 import dev.ml.portablepos.data.local.entity.SaleItemEntity
 import dev.ml.portablepos.data.local.entity.StockMovementEntity
@@ -24,9 +26,10 @@ import dev.ml.portablepos.data.local.entity.StockMovementEntity
         SaleEntity::class,
         SaleItemEntity::class,
         StockMovementEntity::class,
-        CashierEntity::class
+        CashierEntity::class,
+        ReturnRecordEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -37,6 +40,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun saleItemDao(): SaleItemDao
     abstract fun stockMovementDao(): StockMovementDao
     abstract fun cashierDao(): CashierDao
+    abstract fun returnRecordDao(): ReturnRecordDao
 
     companion object {
         @Volatile
@@ -50,6 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "portable_pos_database"
                 )
                     .addCallback(DatabaseCallback())
+                    .fallbackToDestructiveMigration(false)
                     .build()
                 INSTANCE = instance
                 instance

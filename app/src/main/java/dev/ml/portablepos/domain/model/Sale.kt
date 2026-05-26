@@ -11,6 +11,7 @@ data class Sale(
     val cashReceived: Double,
     val changeAmount: Double = 0.0,
     val paymentMethod: String = "Cash",
+    val refundedAmount: Double = 0.0,
     val status: String = "COMPLETED",
     val syncStatus: String = "SYNCED",
     val lastSyncedAt: Long? = null,

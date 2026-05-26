@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.pos
+import dev.ml.portablepos.util.formatAmount
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -60,7 +61,7 @@ class CheckoutViewModel @Inject constructor(
     fun completeSale() {
         val cashReceived = _uiState.value.cashReceived.toDoubleOrNull() ?: 0.0
         if (cashReceived < grandTotal) {
-            _uiState.update { it.copy(error = "Cash received must be at least ₱${String.format("%.2f", grandTotal)}") }
+            _uiState.update { it.copy(error = "Cash received must be at least ${formatAmount(grandTotal)}") }
             return
         }
 

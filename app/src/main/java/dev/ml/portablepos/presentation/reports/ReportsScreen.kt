@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.reports
+import dev.ml.portablepos.util.formatAmount
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -359,14 +360,14 @@ private fun SummaryGrid(reportData: dev.ml.portablepos.domain.usecase.SalesRepor
         ) {
             SummaryCard(
                 title = "Today's Sales",
-                value = "₱${String.format("%.2f", reportData.todaySales)}",
+                value = "${formatAmount(reportData.todaySales)}",
                 icon = Icons.Default.Today,
                 gradientColors = listOf(Color(0xFF1565C0), Color(0xFF42A5F5)),
                 modifier = Modifier.weight(1f)
             )
             SummaryCard(
                 title = "This Week",
-                value = "₱${String.format("%.2f", reportData.thisWeekSales)}",
+                value = "${formatAmount(reportData.thisWeekSales)}",
                 icon = Icons.Default.CalendarMonth,
                 gradientColors = listOf(Color(0xFF0D47A1), Color(0xFF1976D2)),
                 modifier = Modifier.weight(1f)
@@ -378,7 +379,7 @@ private fun SummaryGrid(reportData: dev.ml.portablepos.domain.usecase.SalesRepor
         ) {
             SummaryCard(
                 title = "This Month",
-                value = "₱${String.format("%.2f", reportData.thisMonthSales)}",
+                value = "${formatAmount(reportData.thisMonthSales)}",
                 icon = Icons.AutoMirrored.Filled.TrendingUp,
                 gradientColors = listOf(Color(0xFFE65100), Color(0xFFFF9800)),
                 modifier = Modifier.weight(1f)
@@ -397,14 +398,14 @@ private fun SummaryGrid(reportData: dev.ml.portablepos.domain.usecase.SalesRepor
         ) {
             SummaryCard(
                 title = "Gross Sales",
-                value = "₱${String.format("%.2f", reportData.todayGrossSales)}",
+                value = "${formatAmount(reportData.todayGrossSales)}",
                 icon = Icons.Default.AttachMoney,
                 gradientColors = listOf(Color(0xFF1A237E), Color(0xFF1565C0)),
                 modifier = Modifier.weight(1f)
             )
             SummaryCard(
                 title = "Discounts",
-                value = "₱${String.format("%.2f", reportData.todayDiscounts)}",
+                value = "${formatAmount(reportData.todayDiscounts)}",
                 icon = Icons.Default.Discount,
                 gradientColors = listOf(Color(0xFFC62828), Color(0xFFEF5350)),
                 modifier = Modifier.weight(1f)
@@ -504,7 +505,7 @@ private fun BestSellingCard(item: SaleItem) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "₱${String.format("%.2f", item.unitPrice)}",
+                text = "${formatAmount(item.unitPrice)}",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryBlue
@@ -519,7 +520,7 @@ private fun BestSellingCard(item: SaleItem) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "₱${String.format("%.2f", item.totalPrice)}",
+                    text = "${formatAmount(item.totalPrice)}",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
                     color = PrimaryBlue

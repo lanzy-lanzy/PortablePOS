@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.pos
+import dev.ml.portablepos.util.formatAmount
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -77,7 +78,7 @@ fun CheckoutScreen(
             onDismissRequest = { viewModel.dismissConfirmDialog() },
             title = { Text("Confirm Sale") },
             text = {
-                Text("Complete this sale for ₱${String.format("%.2f", grandTotal)}?")
+                Text("Complete this sale for ${formatAmount(grandTotal)}?")
             },
             confirmButton = {
                 TextButton(onClick = { viewModel.completeSale() }) {
@@ -148,13 +149,13 @@ fun CheckoutScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "₱${String.format("%.2f", item.product.sellingPrice)} x ${item.quantity}",
+                                    text = "${formatAmount(item.product.sellingPrice)} x ${item.quantity}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Text(
-                                text = "₱${String.format("%.2f", item.subtotal)}",
+                                text = "${formatAmount(item.subtotal)}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -170,7 +171,7 @@ fun CheckoutScreen(
                         ) {
                             Text("Subtotal", style = MaterialTheme.typography.bodyLarge)
                             Text(
-                                "₱${String.format("%.2f", subtotal)}",
+                                "${formatAmount(subtotal)}",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
@@ -183,7 +184,7 @@ fun CheckoutScreen(
                         ) {
                             Text("Discount", style = MaterialTheme.typography.bodyLarge)
                             Text(
-                                "-₱${String.format("%.2f", discount)}",
+                                "-${formatAmount(discount)}",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -201,7 +202,7 @@ fun CheckoutScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "₱${String.format("%.2f", grandTotal)}",
+                                "${formatAmount(grandTotal)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryBlue
@@ -246,7 +247,7 @@ fun CheckoutScreen(
                         ) {
                             Text("Change:", style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "₱${String.format("%.2f", uiState.changeAmount)}",
+                                "${formatAmount(uiState.changeAmount)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = if (uiState.changeAmount >= 0) SuccessGreen else MaterialTheme.colorScheme.error

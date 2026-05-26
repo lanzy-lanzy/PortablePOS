@@ -1,5 +1,7 @@
 package dev.ml.portablepos.domain.repository
 
+import dev.ml.portablepos.domain.model.ItemReturnInput
+import dev.ml.portablepos.domain.model.ReturnRecord
 import dev.ml.portablepos.domain.model.Sale
 import dev.ml.portablepos.domain.model.SaleItem
 import kotlinx.coroutines.flow.Flow
@@ -22,4 +24,10 @@ interface SaleRepository {
     suspend fun deleteSale(sale: Sale)
     fun getSaleItems(saleId: Long): Flow<List<SaleItem>>
     suspend fun completeSale(sale: Sale, saleItems: List<SaleItem>, productStocks: Map<Long, Int>): Long
+
+    fun getReturnableItems(saleId: Long): Flow<List<SaleItem>>
+
+    fun getAllReturnRecords(): Flow<List<ReturnRecord>>
+
+    suspend fun processReturn(saleId: Long, items: List<ItemReturnInput>, reason: String): Long
 }

@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.saleshistory
+import dev.ml.portablepos.util.formatAmount
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -333,7 +334,7 @@ private fun SaleCard(sale: Sale, onClick: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "₱${String.format("%.2f", sale.totalAmount)}",
+                        text = "${formatAmount(sale.totalAmount)}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryBlue

@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.dashboard
+import dev.ml.portablepos.util.formatAmount
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -193,7 +194,7 @@ fun DashboardScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 StatCard(
-                                    value = "₱${String.format("%.2f", data.todaySales)}",
+                                    value = "${formatAmount(data.todaySales)}",
                                     label = "Today's Sales",
                                     icon = Icons.Default.PointOfSale,
                                     gradientColors = listOf(Color(0xFF1565C0), Color(0xFF1E88E5)),

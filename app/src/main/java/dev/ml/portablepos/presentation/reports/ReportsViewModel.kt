@@ -1,4 +1,5 @@
 package dev.ml.portablepos.presentation.reports
+import dev.ml.portablepos.util.formatAmount
 
 import android.content.Context
 import android.graphics.Canvas
@@ -265,9 +266,9 @@ class ReportsViewModel @Inject constructor(
 
         y = drawMetric("Total Transactions", "$totalTransactions", y)
         y = drawMetric("Total Items Sold", "$totalItems", y)
-        y = drawMetric("Gross Sales", "₱${String.format("%.2f", totalGross)}", y)
-        y = drawMetric("Total Discounts", "₱${String.format("%.2f", totalDiscounts)}", y)
-        y = drawMetric("Net Sales", "₱${String.format("%.2f", totalSales)}", y)
+        y = drawMetric("Gross Sales", "${formatAmount(totalGross)}", y)
+        y = drawMetric("Total Discounts", "${formatAmount(totalDiscounts)}", y)
+        y = drawMetric("Net Sales", "${formatAmount(totalSales)}", y)
 
         y += 16f
         canvas.drawLine(margin, y, margin + pageWidth, y, dividerPaint)
@@ -301,7 +302,7 @@ class ReportsViewModel @Inject constructor(
             canvas.drawText(sale.transactionNumber, margin + 20f, y + 10f, textPaint)
             canvas.drawText(transactionDateFormat.format(Date(sale.createdAt)), margin + 200f, y + 10f, textPaint)
             canvas.drawText("${items.sumOf { it.quantity }}", margin + 325f, y + 10f, textPaint)
-            canvas.drawText("₱${String.format("%.2f", sale.totalAmount)}", margin + 430f, y + 10f, boldTextPaint)
+            canvas.drawText("${formatAmount(sale.totalAmount)}", margin + 430f, y + 10f, boldTextPaint)
             y += 14f
         }
 
@@ -309,7 +310,7 @@ class ReportsViewModel @Inject constructor(
         canvas.drawLine(margin, y, margin + pageWidth, y, dividerPaint)
         y += 16f
 
-        canvas.drawText("Total: ₱${String.format("%.2f", totalSales)}", margin + pageWidth - 150f, y, boldTextPaint.apply { textSize = 12f })
+        canvas.drawText("Total: ${formatAmount(totalSales)}", margin + pageWidth - 150f, y, boldTextPaint.apply { textSize = 12f })
 
         document.finishPage(page)
         document.writeTo(outputStream)

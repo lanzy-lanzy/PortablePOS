@@ -7,6 +7,7 @@ import dev.ml.portablepos.domain.model.ScannerMode
 import dev.ml.portablepos.domain.usecase.BarcodeScanResult
 import dev.ml.portablepos.domain.usecase.ProcessBarcodeScanUseCase
 import dev.ml.portablepos.presentation.pos.CartManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -25,13 +26,14 @@ sealed class ScannerNavigation {
 }
 
 data class ScannerUiState(
-    val scannedBarcode: String? = null,
     val isProcessing: Boolean = false,
     val showProductNotFoundDialog: Boolean = false,
     val notFoundBarcode: String? = null,
     val showBarcodeExistsError: Boolean = false,
     val message: String? = null,
-    val torchOn: Boolean = false
+    val torchOn: Boolean = false,
+    val lastAddedProductName: String? = null,
+    val totalCartItems: Int = 0
 )
 
 @HiltViewModel
@@ -48,6 +50,17 @@ class ScannerViewModel @Inject constructor(
 
     var scanMode: ScannerMode = ScannerMode.SALE
 
+    private var lastScannedBarcode: String? = null
+    private var lastScanTime: Long = 0L
+
+    fun isDuplicateScan(barcode: String): Boolean {
+        val now = System.currentTimeMillis()
+        if (barcode == lastScannedBarcode && now - lastScanTime < 1000L) return true
+        lastScannedBarcode = barcode
+        lastScanTime = now
+        return false
+    }
+
     fun setMode(mode: String) {
         scanMode = try {
             ScannerMode.valueOf(mode)
@@ -59,7 +72,7 @@ class ScannerViewModel @Inject constructor(
     fun processBarcode(barcode: String) {
         if (_uiState.value.isProcessing) return
         viewModelScope.launch {
-            _uiState.update { it.copy(isProcessing = true, scannedBarcode = barcode) }
+            _uiState.update { it.copy(isProcessing = true) }
             when (val result = processBarcodeScanUseCase(barcode)) {
                 is BarcodeScanResult.ProductFound -> {
                     when (scanMode) {
@@ -69,7 +82,13 @@ class ScannerViewModel @Inject constructor(
                         }
                         ScannerMode.SALE -> {
                             cartManager.addItem(result.product)
-                            _navigation.emit(ScannerNavigation.GoBack)
+                            _uiState.update {
+                                it.copy(
+                                    isProcessing = false,
+                                    lastAddedProductName = result.product.name,
+                                    totalCartItems = cartManager.itemCount
+                                )
+                            }
                         }
                     }
                 }
@@ -105,6 +124,16 @@ class ScannerViewModel @Inject constructor(
 
     fun toggleTorch() {
         _uiState.update { it.copy(torchOn = !it.torchOn) }
+    }
+
+    fun clearLastAddedProduct() {
+        _uiState.update { it.copy(lastAddedProductName = null) }
+    }
+
+    fun doneScanning() {
+        viewModelScope.launch {
+            _navigation.emit(ScannerNavigation.GoBack)
+        }
     }
 
     fun goBack() {

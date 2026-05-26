@@ -10,6 +10,7 @@ import dev.ml.portablepos.data.local.database.AppDatabase
 import dev.ml.portablepos.data.local.dao.CashierDao
 import dev.ml.portablepos.data.local.dao.CategoryDao
 import dev.ml.portablepos.data.local.dao.ProductDao
+import dev.ml.portablepos.data.local.dao.ReturnRecordDao
 import dev.ml.portablepos.data.local.dao.SaleDao
 import dev.ml.portablepos.data.local.dao.SaleItemDao
 import dev.ml.portablepos.data.local.dao.StockMovementDao
@@ -39,6 +40,9 @@ object DatabaseModule {
 
     @Provides
     fun provideStockMovementDao(database: AppDatabase): StockMovementDao = database.stockMovementDao()
+
+    @Provides
+    fun provideReturnRecordDao(database: AppDatabase): ReturnRecordDao = database.returnRecordDao()
 
     @Provides
     fun provideCashierDao(database: AppDatabase): CashierDao = database.cashierDao()
