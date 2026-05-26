@@ -1,12 +1,16 @@
 package dev.ml.portablepos.presentation.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,6 +20,7 @@ import androidx.navigation.navArgument
 import dev.ml.portablepos.presentation.dashboard.DashboardScreen
 import dev.ml.portablepos.presentation.inventory.InventoryScreen
 import dev.ml.portablepos.presentation.inventory.StockAdjustmentScreen
+import dev.ml.portablepos.presentation.login.LoginScreen
 import dev.ml.portablepos.presentation.pos.CheckoutScreen
 import dev.ml.portablepos.presentation.pos.POSScreen
 import dev.ml.portablepos.presentation.product.AddEditProductScreen
@@ -26,16 +31,33 @@ import dev.ml.portablepos.presentation.reports.ReportsScreen
 import dev.ml.portablepos.presentation.saleshistory.SaleDetailScreen
 import dev.ml.portablepos.presentation.saleshistory.SalesHistoryScreen
 import dev.ml.portablepos.presentation.scanner.BarcodeScannerScreen
+import dev.ml.portablepos.presentation.session.SessionManager
 import dev.ml.portablepos.presentation.settings.SettingsScreen
 import dev.ml.portablepos.presentation.returns.ReturnHistoryScreen
 import dev.ml.portablepos.presentation.returns.ReturnScreen
 import dev.ml.portablepos.presentation.splash.SplashScreen
+import kotlinx.coroutines.delay
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    sessionManager: SessionManager
+) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomNav = currentRoute in showBottomNavRoutes
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1_000L)
+            if (sessionManager.isSessionExpired()) {
+                sessionManager.endSession()
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        }
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -45,157 +67,180 @@ fun NavGraph(navController: NavHostController) {
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Splash.route,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding())
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            awaitPointerEvent(PointerEventPass.Initial)
+                            sessionManager.recordActivity()
+                        }
+                    }
+                }
         ) {
-            composable(Screen.Splash.route) {
-                SplashScreen(navController = navController)
-            }
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Splash.route,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = innerPadding.calculateBottomPadding())
+            ) {
+                composable(Screen.Splash.route) {
+                    SplashScreen(navController = navController)
+                }
 
-            composable(Screen.Dashboard.route) {
-                DashboardScreen(navController = navController)
-            }
+                composable(Screen.Login.route) {
+                    LoginScreen(
+                        onLoginSuccess = { cashierName, role ->
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
+                        }
+                    )
+                }
 
-            composable(Screen.ProductList.route) {
-                ProductListScreen(navController = navController)
-            }
+                composable(Screen.Dashboard.route) {
+                    DashboardScreen(navController = navController)
+                }
 
-            composable(
-                route = Screen.AddProduct.route,
-                arguments = listOf(
-                    navArgument("barcode") {
-                        type = NavType.StringType
-                        defaultValue = ""
-                    }
-                )
-            ) { backStackEntry ->
-                val barcode = backStackEntry.arguments?.getString("barcode") ?: ""
-                AddEditProductScreen(
-                    navController = navController,
-                    barcode = barcode.ifBlank { null }
-                )
-            }
+                composable(Screen.ProductList.route) {
+                    ProductListScreen(navController = navController)
+                }
 
-            composable(
-                route = Screen.EditProduct.route,
-                arguments = listOf(
-                    navArgument("productId") {
-                        type = NavType.LongType
-                    }
-                )
-            ) { backStackEntry ->
-                val productId = backStackEntry.arguments?.getLong("productId") ?: 0L
-                EditProductScreen(
-                    navController = navController,
-                    productId = productId
-                )
-            }
+                composable(
+                    route = Screen.AddProduct.route,
+                    arguments = listOf(
+                        navArgument("barcode") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        }
+                    )
+                ) { backStackEntry ->
+                    val barcode = backStackEntry.arguments?.getString("barcode") ?: ""
+                    AddEditProductScreen(
+                        navController = navController,
+                        barcode = barcode.ifBlank { null }
+                    )
+                }
 
-            composable(
-                route = Screen.Scanner.route,
-                arguments = listOf(
-                    navArgument("mode") {
-                        type = NavType.StringType
-                    }
-                )
-            ) { backStackEntry ->
-                val mode = backStackEntry.arguments?.getString("mode") ?: ""
-                BarcodeScannerScreen(
-                    navController = navController,
-                    mode = mode
-                )
-            }
+                composable(
+                    route = Screen.EditProduct.route,
+                    arguments = listOf(
+                        navArgument("productId") {
+                            type = NavType.LongType
+                        }
+                    )
+                ) { backStackEntry ->
+                    val productId = backStackEntry.arguments?.getLong("productId") ?: 0L
+                    EditProductScreen(
+                        navController = navController,
+                        productId = productId
+                    )
+                }
 
-            composable(Screen.POS.route) {
-                POSScreen(navController = navController)
-            }
+                composable(
+                    route = Screen.Scanner.route,
+                    arguments = listOf(
+                        navArgument("mode") {
+                            type = NavType.StringType
+                        }
+                    )
+                ) { backStackEntry ->
+                    val mode = backStackEntry.arguments?.getString("mode") ?: ""
+                    BarcodeScannerScreen(
+                        navController = navController,
+                        mode = mode
+                    )
+                }
 
-            composable(Screen.Checkout.route) {
-                CheckoutScreen(navController = navController)
-            }
+                composable(Screen.POS.route) {
+                    POSScreen(navController = navController)
+                }
 
-            composable(
-                route = Screen.Receipt.route,
-                arguments = listOf(
-                    navArgument("saleId") {
-                        type = NavType.LongType
-                    }
-                )
-            ) { backStackEntry ->
-                val saleId = backStackEntry.arguments?.getLong("saleId") ?: 0L
-                ReceiptScreen(
-                    navController = navController,
-                    saleId = saleId
-                )
-            }
+                composable(Screen.Checkout.route) {
+                    CheckoutScreen(navController = navController)
+                }
 
-            composable(Screen.SalesHistory.route) {
-                SalesHistoryScreen(navController = navController)
-            }
+                composable(
+                    route = Screen.Receipt.route,
+                    arguments = listOf(
+                        navArgument("saleId") {
+                            type = NavType.LongType
+                        }
+                    )
+                ) { backStackEntry ->
+                    val saleId = backStackEntry.arguments?.getLong("saleId") ?: 0L
+                    ReceiptScreen(
+                        navController = navController,
+                        saleId = saleId
+                    )
+                }
 
-            composable(
-                route = Screen.SaleDetail.route,
-                arguments = listOf(
-                    navArgument("saleId") {
-                        type = NavType.LongType
-                    }
-                )
-            ) { backStackEntry ->
-                val saleId = backStackEntry.arguments?.getLong("saleId") ?: 0L
-                SaleDetailScreen(
-                    navController = navController,
-                    saleId = saleId
-                )
-            }
+                composable(Screen.SalesHistory.route) {
+                    SalesHistoryScreen(navController = navController)
+                }
 
-            composable(Screen.Inventory.route) {
-                InventoryScreen(navController = navController)
-            }
+                composable(
+                    route = Screen.SaleDetail.route,
+                    arguments = listOf(
+                        navArgument("saleId") {
+                            type = NavType.LongType
+                        }
+                    )
+                ) { backStackEntry ->
+                    val saleId = backStackEntry.arguments?.getLong("saleId") ?: 0L
+                    SaleDetailScreen(
+                        navController = navController,
+                        saleId = saleId
+                    )
+                }
 
-            composable(
-                route = Screen.StockAdjustment.route,
-                arguments = listOf(
-                    navArgument("productId") {
-                        type = NavType.LongType
-                    }
-                )
-            ) { backStackEntry ->
-                val productId = backStackEntry.arguments?.getLong("productId") ?: 0L
-                StockAdjustmentScreen(
-                    navController = navController,
-                    productId = productId
-                )
-            }
+                composable(Screen.Inventory.route) {
+                    InventoryScreen(navController = navController)
+                }
 
-            composable(
-                route = Screen.Return.route,
-                arguments = listOf(
-                    navArgument("saleId") {
-                        type = NavType.LongType
-                    }
-                )
-            ) { backStackEntry ->
-                val saleId = backStackEntry.arguments?.getLong("saleId") ?: 0L
-                ReturnScreen(
-                    navController = navController,
-                    saleId = saleId
-                )
-            }
+                composable(
+                    route = Screen.StockAdjustment.route,
+                    arguments = listOf(
+                        navArgument("productId") {
+                            type = NavType.LongType
+                        }
+                    )
+                ) { backStackEntry ->
+                    val productId = backStackEntry.arguments?.getLong("productId") ?: 0L
+                    StockAdjustmentScreen(
+                        navController = navController,
+                        productId = productId
+                    )
+                }
 
-            composable(Screen.ReturnHistory.route) {
-                ReturnHistoryScreen(navController = navController)
-            }
+                composable(
+                    route = Screen.Return.route,
+                    arguments = listOf(
+                        navArgument("saleId") {
+                            type = NavType.LongType
+                        }
+                    )
+                ) { backStackEntry ->
+                    val saleId = backStackEntry.arguments?.getLong("saleId") ?: 0L
+                    ReturnScreen(
+                        navController = navController,
+                        saleId = saleId
+                    )
+                }
 
-            composable(Screen.Reports.route) {
-                ReportsScreen(navController = navController)
-            }
+                composable(Screen.ReturnHistory.route) {
+                    ReturnHistoryScreen(navController = navController)
+                }
 
-            composable(Screen.Settings.route) {
-                SettingsScreen(navController = navController)
+                composable(Screen.Reports.route) {
+                    ReportsScreen(navController = navController)
+                }
+
+                composable(Screen.Settings.route) {
+                    SettingsScreen(navController = navController)
+                }
             }
         }
     }

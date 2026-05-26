@@ -83,6 +83,7 @@ fun AddEditProductScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showCategoryDialog by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
+    val isVatCalculated = uiState.enableTax && (uiState.basePrice.toDoubleOrNull() ?: 0.0) > 0
     LaunchedEffect(productId) {
         viewModel.loadProduct(productId)
     }
@@ -95,6 +96,10 @@ fun AddEditProductScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadCategories()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadPreferences()
     }
 
     LaunchedEffect(Unit) {
@@ -290,12 +295,43 @@ fun AddEditProductScreen(
                     title = "Pricing",
                     icon = Icons.Default.PriceChange
                 ) {
+                    OutlinedTextField(
+                        value = uiState.basePrice,
+                        onValueChange = { viewModel.onBasePriceChange(it) },
+                        label = { Text("Base Price") },
+                        placeholder = { Text("0.00") },
+                        supportingText = if (uiState.enableTax) {
+                            { Text("Price before VAT. Selling price = base × ${"%.0f".format((uiState.taxRate * 100).toFloat())}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        } else null,
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        prefix = { Text("PHP ") },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        ),
+                        trailingIcon = if (uiState.enableTax) {
+                            {
+                                Text(
+                                    "+${"%.0f".format((uiState.taxRate * 100).toFloat())}%",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        } else null
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
                     Row(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = uiState.costPrice,
                             onValueChange = { viewModel.onCostPriceChange(it) },
                             label = { Text("Cost Price") },
                             placeholder = { Text("0.00") },
+                            supportingText = { Text("What you paid", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -312,10 +348,11 @@ fun AddEditProductScreen(
                         OutlinedTextField(
                             value = uiState.sellingPrice,
                             onValueChange = { viewModel.onSellingPriceChange(it) },
-                            label = { Text("Selling Price *") },
+                            label = { Text(if (uiState.enableTax) "Price (incl. VAT)" else "Selling Price *") },
                             placeholder = { Text("0.00") },
                             isError = uiState.sellingPriceError != null,
                             supportingText = uiState.sellingPriceError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
+                            enabled = !isVatCalculated,
                             modifier = Modifier.weight(1f),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -323,7 +360,11 @@ fun AddEditProductScreen(
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                             )
                         )
                     }
@@ -418,20 +459,21 @@ fun AddEditProductScreen(
                 Spacer(Modifier.height(24.dp))
             }
 
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                snackbar = { snackbarData ->
-                    Snackbar(
-                        snackbarData = snackbarData,
-                        containerColor = MaterialTheme.colorScheme.inverseSurface,
-                        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        snackbar = { snackbarData ->
+            Snackbar(
+                snackbarData = snackbarData,
+                containerColor = MaterialTheme.colorScheme.inverseSurface,
+                contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                shape = RoundedCornerShape(12.dp)
             )
+        }
+    )
+
         }
     }
 }

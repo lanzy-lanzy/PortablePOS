@@ -9,11 +9,14 @@ import dagger.hilt.components.SingletonComponent
 import dev.ml.portablepos.data.local.database.AppDatabase
 import dev.ml.portablepos.data.local.dao.CashierDao
 import dev.ml.portablepos.data.local.dao.CategoryDao
+import dev.ml.portablepos.data.local.dao.CloseoutDao
+import dev.ml.portablepos.data.local.dao.CustomerDao
 import dev.ml.portablepos.data.local.dao.ProductDao
 import dev.ml.portablepos.data.local.dao.ReturnRecordDao
 import dev.ml.portablepos.data.local.dao.SaleDao
 import dev.ml.portablepos.data.local.dao.SaleItemDao
 import dev.ml.portablepos.data.local.dao.StockMovementDao
+import dev.ml.portablepos.data.local.dao.VoidedSaleDao
 import javax.inject.Singleton
 
 @Module
@@ -46,4 +49,13 @@ object DatabaseModule {
 
     @Provides
     fun provideCashierDao(database: AppDatabase): CashierDao = database.cashierDao()
+
+    @Provides
+    fun provideCustomerDao(database: AppDatabase): CustomerDao = database.customerDao()
+
+    @Provides
+    fun provideCloseoutDao(database: AppDatabase): CloseoutDao = database.closeoutDao()
+
+    @Provides
+    fun provideVoidedSaleDao(database: AppDatabase): VoidedSaleDao = database.voidedSaleDao()
 }

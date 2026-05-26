@@ -9,21 +9,32 @@ import javax.inject.Inject
 
 class CompleteSaleUseCase @Inject constructor(
     private val saleRepository: SaleRepository,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val transactionNumberGenerator: GenerateTransactionNumberUseCase
 ) {
     suspend operator fun invoke(
         cartItems: List<CartItem>,
         cashReceived: Double,
         discount: Double = 0.0,
         cashierName: String = "Cashier",
-        paymentMethod: String = "Cash"
+        paymentMethod: String = "Cash",
+        paymentReference: String = ""
     ): Result<Long> {
         return try {
             if (cartItems.isEmpty()) {
                 return Result.failure(IllegalStateException("Cart is empty"))
             }
 
+            if (discount < 0) {
+                return Result.failure(IllegalArgumentException("Discount cannot be negative"))
+            }
+
             val subtotal = cartItems.sumOf { it.subtotal }
+
+            if (discount > subtotal) {
+                return Result.failure(IllegalArgumentException("Discount cannot exceed subtotal"))
+            }
+
             val totalAmount = subtotal - discount
 
             if (cashReceived < totalAmount) {
@@ -48,19 +59,7 @@ class CompleteSaleUseCase @Inject constructor(
                 productStocks[item.product.id] = product.stockQuantity - item.quantity
             }
 
-            val transactionNumber = "TXN-${System.currentTimeMillis()}"
-            val sale = Sale(
-                transactionNumber = transactionNumber,
-                cashierName = cashierName,
-                subtotal = subtotal,
-                discount = discount,
-                totalAmount = totalAmount,
-                cashReceived = cashReceived,
-                changeAmount = cashReceived - totalAmount,
-                paymentMethod = paymentMethod,
-                status = "COMPLETED",
-                syncStatus = "PENDING_CREATE"
-            )
+            val transactionNumber = transactionNumberGenerator()
 
             val saleItems = cartItems.map { item ->
                 SaleItem(
@@ -74,7 +73,26 @@ class CompleteSaleUseCase @Inject constructor(
                 )
             }
 
-            val saleId = saleRepository.completeSale(sale, saleItems, productStocks)
+            val sale = Sale(
+                transactionNumber = transactionNumber,
+                cashierName = cashierName,
+                subtotal = subtotal,
+                discount = discount,
+                totalAmount = totalAmount,
+                cashReceived = cashReceived,
+                changeAmount = cashReceived - totalAmount,
+                paymentMethod = paymentMethod,
+                paymentReference = paymentReference,
+                status = "COMPLETED",
+                syncStatus = "PENDING_CREATE"
+            )
+
+            val saleId = saleRepository.completeSale(
+                sale = sale,
+                saleItems = saleItems,
+                productStocks = productStocks,
+                cashierName = cashierName
+            )
             Result.success(saleId)
         } catch (e: Exception) {
             Result.failure(e)

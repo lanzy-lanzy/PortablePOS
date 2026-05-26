@@ -89,6 +89,7 @@ class ScannerViewModel @Inject constructor(
                                     totalCartItems = cartManager.itemCount
                                 )
                             }
+                            _navigation.emit(ScannerNavigation.GoBack)
                         }
                     }
                 }

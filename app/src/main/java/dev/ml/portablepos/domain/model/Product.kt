@@ -9,6 +9,7 @@ data class Product(
     val categoryName: String? = null,
     val description: String? = null,
     val costPrice: Double = 0.0,
+    val basePrice: Double = 0.0,
     val sellingPrice: Double = 0.0,
     val stockQuantity: Int = 0,
     val reorderLevel: Int = 0,

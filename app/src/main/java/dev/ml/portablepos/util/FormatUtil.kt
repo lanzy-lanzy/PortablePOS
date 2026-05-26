@@ -1,5 +1,4 @@
 package dev.ml.portablepos.util
-import dev.ml.portablepos.util.formatAmount
 
 import java.util.Locale
 

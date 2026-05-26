@@ -4,6 +4,8 @@ import dev.ml.portablepos.data.local.dao.ProductDao
 import dev.ml.portablepos.data.local.dao.ReturnRecordDao
 import dev.ml.portablepos.data.local.dao.SaleDao
 import dev.ml.portablepos.data.local.dao.SaleItemDao
+import dev.ml.portablepos.data.local.dao.StockMovementDao
+import dev.ml.portablepos.data.local.database.AppDatabase
 import dev.ml.portablepos.data.mapper.toDomainModel
 import dev.ml.portablepos.data.mapper.toEntity
 import dev.ml.portablepos.domain.model.ItemReturnInput
@@ -22,7 +24,9 @@ class SaleRepositoryImpl @Inject constructor(
     private val saleDao: SaleDao,
     private val saleItemDao: SaleItemDao,
     private val productDao: ProductDao,
-    private val returnRecordDao: ReturnRecordDao
+    private val returnRecordDao: ReturnRecordDao,
+    private val stockMovementDao: StockMovementDao,
+    private val database: AppDatabase
 ) : SaleRepository {
 
     override fun getAllSales(): Flow<List<Sale>> =
@@ -79,14 +83,15 @@ class SaleRepositoryImpl @Inject constructor(
     override suspend fun completeSale(
         sale: Sale,
         saleItems: List<SaleItem>,
-        productStocks: Map<Long, Int>
+        productStocks: Map<Long, Int>,
+        cashierName: String
     ): Long {
-        val saleId = saleDao.insertSale(sale.toEntity())
-        saleItemDao.insertSaleItems(saleItems.map { it.copy(saleId = saleId).toEntity() })
-        productStocks.forEach { (productId, newStock) ->
-            productDao.updateStock(productId, newStock)
-        }
-        return saleId
+        return database.completeSaleTransaction(
+            sale = sale.toEntity(),
+            items = saleItems.map { it.copy(saleId = 0L).toEntity() },
+            productStocks = productStocks,
+            cashierName = cashierName
+        )
     }
 
     override fun getBestSellingProducts(limit: Int): Flow<List<SaleItem>> =
@@ -103,41 +108,6 @@ class SaleRepositoryImpl @Inject constructor(
         }
 
     override suspend fun processReturn(saleId: Long, items: List<ItemReturnInput>, reason: String): Long {
-        val totalRefund = items.sumOf { it.refundAmount }
-
-        val saleItemEntities = saleItemDao.getItemsBySaleId(saleId).first()
-        for (input in items) {
-            val entity = saleItemEntities.find { it.productId == input.productId } ?: continue
-            saleItemDao.updateSaleItem(entity.copy(refundedQuantity = entity.refundedQuantity + input.quantity))
-
-            val product = productDao.getProductByIdOnce(input.productId) ?: continue
-            productDao.updateStock(input.productId, product.stockQuantity + input.quantity)
-        }
-
-        val updatedItems = saleItemDao.getItemsBySaleId(saleId).first()
-        val isFullReturn = updatedItems.all { it.refundedQuantity >= it.quantity }
-
-        val jsonArray = org.json.JSONArray()
-        items.forEach { input ->
-            val obj = org.json.JSONObject()
-            obj.put("productId", input.productId)
-            obj.put("quantity", input.quantity)
-            obj.put("refundAmount", input.refundAmount)
-            jsonArray.put(obj)
-        }
-
-        val record = dev.ml.portablepos.data.local.entity.ReturnRecordEntity(
-            saleId = saleId,
-            refundAmount = totalRefund,
-            reason = reason,
-            isFullReturn = isFullReturn,
-            returnedItemsJson = jsonArray.toString()
-        )
-        val recordId = returnRecordDao.insert(record)
-
-        val sale = saleDao.getSaleById(saleId) ?: return recordId
-        saleDao.updateSale(sale.copy(refundedAmount = sale.refundedAmount + totalRefund))
-
-        return recordId
+        return database.processReturnTransaction(saleId, items, reason)
     }
 }

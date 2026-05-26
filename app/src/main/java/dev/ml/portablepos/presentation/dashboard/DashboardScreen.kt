@@ -171,12 +171,12 @@ fun DashboardScreen(
                             }
 
                             Text(
-                                text = getGreeting(),
+                                text = "${getGreeting()}, ${uiState.cashierName}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.8f)
                             )
                             Text(
-                                text = "PortablePOS",
+                                text = uiState.storeName,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White

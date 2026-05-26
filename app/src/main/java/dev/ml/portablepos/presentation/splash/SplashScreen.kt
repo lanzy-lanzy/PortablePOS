@@ -87,7 +87,7 @@ fun SplashScreen(
     LaunchedEffect(Unit) {
         startAnimation = true
         delay(2800)
-        navController.navigate(Screen.Dashboard.route) {
+        navController.navigate(Screen.Login.route) {
             popUpTo(Screen.Splash.route) { inclusive = true }
         }
     }
@@ -97,7 +97,7 @@ fun SplashScreen(
             .fillMaxSize()
             .background(PrimaryBlue)
             .clickable {
-                navController.navigate(Screen.Dashboard.route) {
+                navController.navigate(Screen.Login.route) {
                     popUpTo(Screen.Splash.route) { inclusive = true }
                 }
             }

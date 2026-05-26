@@ -24,6 +24,8 @@ data class ProductEntity(
     val description: String? = null,
     @ColumnInfo(name = "cost_price")
     val costPrice: Double = 0.0,
+    @ColumnInfo(name = "base_price")
+    val basePrice: Double = 0.0,
     @ColumnInfo(name = "selling_price")
     val sellingPrice: Double = 0.0,
     @ColumnInfo(name = "stock_quantity")

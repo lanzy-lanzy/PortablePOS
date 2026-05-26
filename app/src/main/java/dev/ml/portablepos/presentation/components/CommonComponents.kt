@@ -140,12 +140,22 @@ fun ProductCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Text(
-                    text = "${formatAmount(product.sellingPrice)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${formatAmount(product.sellingPrice)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryBlue
+                    )
+                    if (product.basePrice > 0) {
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "(incl. VAT)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             StockBadge(stockQuantity = product.stockQuantity)
         }

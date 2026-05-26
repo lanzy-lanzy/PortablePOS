@@ -3,6 +3,7 @@ package dev.ml.portablepos.presentation.product
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.ml.portablepos.data.local.preferences.AppPreferences
 import dev.ml.portablepos.domain.model.Category
 import dev.ml.portablepos.domain.model.Product
 import dev.ml.portablepos.domain.repository.CategoryRepository
@@ -16,7 +17,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 data class AddEditProductUiState(
@@ -27,6 +30,7 @@ data class AddEditProductUiState(
     val name: String = "",
     val barcode: String = "",
     val categoryId: Long? = null,
+    val basePrice: String = "",
     val costPrice: String = "",
     val sellingPrice: String = "",
     val stockQuantity: String = "",
@@ -36,7 +40,9 @@ data class AddEditProductUiState(
     val categories: List<Category> = emptyList(),
     val nameError: String? = null,
     val sellingPriceError: String? = null,
-    val error: String? = null
+    val error: String? = null,
+    val enableTax: Boolean = false,
+    val taxRate: Double = 0.12
 )
 
 sealed class AddEditProductEvent {
@@ -49,7 +55,8 @@ class AddEditProductViewModel @Inject constructor(
     private val addProductUseCase: AddProductUseCase,
     private val updateProductUseCase: UpdateProductUseCase,
     private val productRepository: ProductRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val appPreferences: AppPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddEditProductUiState())
@@ -60,6 +67,17 @@ class AddEditProductViewModel @Inject constructor(
 
     private var loadedProductCreatedAt: Long = System.currentTimeMillis()
 
+    fun loadPreferences() {
+        viewModelScope.launch {
+            val enableTax = appPreferences.enableTax.first()
+            val taxRate = appPreferences.taxRate.first()
+            _uiState.value = _uiState.value.copy(
+                enableTax = enableTax,
+                taxRate = if (taxRate > 0.0) taxRate else 0.12
+            )
+        }
+    }
+
     fun loadProduct(productId: Long?) {
         if (productId == null || productId == 0L) return
         viewModelScope.launch {
@@ -67,6 +85,8 @@ class AddEditProductViewModel @Inject constructor(
             val product = productRepository.getProductByIdOnce(productId)
             if (product != null) {
                 loadedProductCreatedAt = product.createdAt
+                val basePriceStr = if (product.basePrice > 0) product.basePrice.toString() else ""
+                val sellingPriceStr = if (product.sellingPrice > 0) product.sellingPrice.toString() else ""
                 _uiState.value = AddEditProductUiState(
                     isLoading = false,
                     isEditMode = true,
@@ -74,13 +94,16 @@ class AddEditProductViewModel @Inject constructor(
                     name = product.name,
                     barcode = product.barcode ?: "",
                     categoryId = product.categoryId,
+                    basePrice = basePriceStr,
                     costPrice = if (product.costPrice > 0) product.costPrice.toString() else "",
-                    sellingPrice = if (product.sellingPrice > 0) product.sellingPrice.toString() else "",
+                    sellingPrice = sellingPriceStr,
                     stockQuantity = product.stockQuantity.toString(),
                     reorderLevel = product.reorderLevel.toString(),
                     unit = product.unit,
                     description = product.description ?: "",
-                    categories = _uiState.value.categories
+                    categories = _uiState.value.categories,
+                    enableTax = _uiState.value.enableTax,
+                    taxRate = _uiState.value.taxRate
                 )
             } else {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = "Product not found")
@@ -129,6 +152,24 @@ class AddEditProductViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(categoryId = id)
     }
 
+    fun onBasePriceChange(value: String) {
+        if (value.isNotEmpty() && !value.matches(Regex("^\\d*\\.?\\d{0,2}$"))) return
+        _uiState.value = _uiState.value.copy(basePrice = value, sellingPriceError = null)
+        autoCalcSellingPrice(value)
+    }
+
+    private fun autoCalcSellingPrice(basePriceStr: String) {
+        val state = _uiState.value
+        val base = basePriceStr.toDoubleOrNull()
+        if (base != null && base > 0 && state.enableTax) {
+            val inclusive = base * (1.0 + state.taxRate)
+            val formatted = String.format(Locale.US, "%.2f", inclusive)
+            _uiState.value = _uiState.value.copy(sellingPrice = formatted)
+        } else if (base != null && base > 0) {
+            _uiState.value = _uiState.value.copy(sellingPrice = basePriceStr)
+        }
+    }
+
     fun onCostPriceChange(value: String) {
         if (value.isEmpty() || value.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
             _uiState.value = _uiState.value.copy(costPrice = value)
@@ -136,6 +177,7 @@ class AddEditProductViewModel @Inject constructor(
     }
 
     fun onSellingPriceChange(value: String) {
+        if (_uiState.value.enableTax && _uiState.value.basePrice.toDoubleOrNull() != null && _uiState.value.basePrice.toDoubleOrNull()!! > 0) return
         if (value.isEmpty() || value.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
             _uiState.value = _uiState.value.copy(sellingPrice = value, sellingPriceError = null)
         }
@@ -164,6 +206,7 @@ class AddEditProductViewModel @Inject constructor(
     fun resetForm() {
         val currentCategories = _uiState.value.categories
         _uiState.value = AddEditProductUiState(categories = currentCategories)
+        loadPreferences()
     }
 
     fun save() {
@@ -193,6 +236,7 @@ class AddEditProductViewModel @Inject constructor(
                 categoryId = state.categoryId,
                 description = state.description.trim().ifBlank { null },
                 costPrice = state.costPrice.toDoubleOrNull() ?: 0.0,
+                basePrice = state.basePrice.toDoubleOrNull() ?: 0.0,
                 sellingPrice = sellingPrice ?: 0.0,
                 stockQuantity = state.stockQuantity.toIntOrNull() ?: 0,
                 reorderLevel = state.reorderLevel.toIntOrNull() ?: 0,

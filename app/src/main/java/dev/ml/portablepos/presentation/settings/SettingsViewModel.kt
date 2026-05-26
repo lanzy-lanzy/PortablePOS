@@ -18,14 +18,19 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 
 data class SettingsUiState(
     val storeName: String = "PortablePOS",
+    val storeAddress: String = "",
+    val storeContact: String = "",
+    val receiptFooter: String = "",
     val cashierName: String = "Cashier",
+    val enableTax: Boolean = false,
+    val taxRate: Double = 0.0,
+    val taxRateText: String = "0",
+    val printerEnabled: Boolean = false,
+    val printerAddress: String = "",
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val isExporting: Boolean = false,
@@ -54,35 +59,98 @@ class SettingsViewModel @Inject constructor(
                 appPreferences.storeName.collect { name ->
                     _uiState.update { it.copy(storeName = name) }
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Failed to load settings") }
-            }
+            } catch (_: Exception) {}
+        }
+        viewModelScope.launch {
+            try {
+                appPreferences.storeAddress.collect { addr ->
+                    _uiState.update { it.copy(storeAddress = addr) }
+                }
+            } catch (_: Exception) {}
+        }
+        viewModelScope.launch {
+            try {
+                appPreferences.storeContact.collect { contact ->
+                    _uiState.update { it.copy(storeContact = contact) }
+                }
+            } catch (_: Exception) {}
+        }
+        viewModelScope.launch {
+            try {
+                appPreferences.receiptFooter.collect { footer ->
+                    _uiState.update { it.copy(receiptFooter = footer) }
+                }
+            } catch (_: Exception) {}
         }
         viewModelScope.launch {
             try {
                 appPreferences.cashierName.collect { name ->
-                    _uiState.update { it.copy(cashierName = name, isLoading = false) }
+                    _uiState.update { it.copy(cashierName = name) }
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Failed to load settings") }
+            } catch (_: Exception) {}
+        }
+        viewModelScope.launch {
+            try {
+                appPreferences.enableTax.collect { enabled ->
+                    _uiState.update { it.copy(enableTax = enabled) }
+                }
+            } catch (_: Exception) {}
+        }
+        viewModelScope.launch {
+            try {
+                appPreferences.taxRate.collect { rate ->
+                    _uiState.update { it.copy(taxRate = rate, taxRateText = (rate * 100).toInt().toString(), isLoading = false) }
+                }
+            } catch (_: Exception) {
+                _uiState.update { it.copy(isLoading = false) }
             }
+        }
+        viewModelScope.launch {
+            try {
+                appPreferences.printerEnabled.collect { enabled ->
+                    _uiState.update { it.copy(printerEnabled = enabled) }
+                }
+            } catch (_: Exception) {}
+        }
+        viewModelScope.launch {
+            try {
+                appPreferences.printerAddress.collect { addr ->
+                    _uiState.update { it.copy(printerAddress = addr) }
+                }
+            } catch (_: Exception) {}
         }
     }
 
-    fun onStoreNameChange(name: String) {
-        _uiState.update { it.copy(storeName = name) }
+    fun onStoreNameChange(name: String) { _uiState.update { it.copy(storeName = name) } }
+    fun onStoreAddressChange(addr: String) { _uiState.update { it.copy(storeAddress = addr) } }
+    fun onStoreContactChange(contact: String) { _uiState.update { it.copy(storeContact = contact) } }
+    fun onReceiptFooterChange(footer: String) { _uiState.update { it.copy(receiptFooter = footer) } }
+    fun onCashierNameChange(name: String) { _uiState.update { it.copy(cashierName = name) } }
+    fun onEnableTaxChange(enabled: Boolean) { _uiState.update { it.copy(enableTax = enabled) } }
+
+    fun onTaxRateChange(value: String) {
+        val filtered = value.filter { it.isDigit() }
+        val rate = (filtered.toIntOrNull() ?: 0).coerceIn(0, 100)
+        _uiState.update { it.copy(taxRateText = filtered, taxRate = rate / 100.0) }
     }
 
-    fun onCashierNameChange(name: String) {
-        _uiState.update { it.copy(cashierName = name) }
-    }
+    fun onPrinterEnabledChange(enabled: Boolean) { _uiState.update { it.copy(printerEnabled = enabled) } }
+    fun onPrinterAddressChange(addr: String) { _uiState.update { it.copy(printerAddress = addr) } }
 
     fun save() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null, message = null) }
             try {
-                appPreferences.saveStoreName(_uiState.value.storeName)
-                appPreferences.saveCashierName(_uiState.value.cashierName)
+                val s = _uiState.value
+                appPreferences.saveStoreName(s.storeName)
+                appPreferences.saveStoreAddress(s.storeAddress)
+                appPreferences.saveStoreContact(s.storeContact)
+                appPreferences.saveReceiptFooter(s.receiptFooter)
+                appPreferences.saveCashierName(s.cashierName)
+                appPreferences.saveEnableTax(s.enableTax)
+                appPreferences.saveTaxRate(s.taxRate)
+                appPreferences.savePrinterEnabled(s.printerEnabled)
+                appPreferences.savePrinterAddress(s.printerAddress)
                 _uiState.update { it.copy(isSaving = false, message = "Settings saved successfully") }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isSaving = false, error = e.message ?: "Failed to save settings") }
@@ -90,9 +158,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun clearMessage() {
-        _uiState.update { it.copy(message = null) }
-    }
+    fun clearMessage() { _uiState.update { it.copy(message = null) } }
 
     fun exportBackup(uri: Uri) {
         viewModelScope.launch {
@@ -101,13 +167,9 @@ class SettingsViewModel @Inject constructor(
                 withContext(Dispatchers.IO) {
                     val dbPath = context.getDatabasePath("portable_pos_database").absolutePath
                     val dbFile = File(dbPath)
-                    if (!dbFile.exists()) {
-                        throw IllegalStateException("Database file not found")
-                    }
+                    if (!dbFile.exists()) throw IllegalStateException("Database file not found")
                     context.contentResolver.openOutputStream(uri)?.use { output ->
-                        FileInputStream(dbFile).use { input ->
-                            input.copyTo(output)
-                        }
+                        FileInputStream(dbFile).use { input -> input.copyTo(output) }
                     } ?: throw IllegalStateException("Failed to open output stream")
                 }
                 _uiState.update { it.copy(isExporting = false, message = "Backup exported successfully") }
@@ -123,20 +185,13 @@ class SettingsViewModel @Inject constructor(
             try {
                 withContext(Dispatchers.IO) {
                     AppDatabase.closeDatabase()
-
                     val dbPath = context.getDatabasePath("portable_pos_database").absolutePath
                     val dbFile = File(dbPath)
                     val walFile = File("$dbPath-wal")
                     val shmFile = File("$dbPath-shm")
-
-                    dbFile.delete()
-                    walFile.delete()
-                    shmFile.delete()
-
+                    dbFile.delete(); walFile.delete(); shmFile.delete()
                     context.contentResolver.openInputStream(uri)?.use { input ->
-                        FileOutputStream(dbFile).use { output ->
-                            input.copyTo(output)
-                        }
+                        FileOutputStream(dbFile).use { output -> input.copyTo(output) }
                     } ?: throw IllegalStateException("Failed to open input stream")
                 }
                 _uiState.update { it.copy(isImporting = false, message = "Backup restored successfully. Restart app to apply changes.") }

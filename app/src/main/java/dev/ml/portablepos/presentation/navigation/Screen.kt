@@ -2,6 +2,7 @@ package dev.ml.portablepos.presentation.navigation
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
+    object Login : Screen("login")
     object Dashboard : Screen("dashboard")
     object ProductList : Screen("product_list")
     object AddProduct : Screen("add_product?barcode={barcode}") {

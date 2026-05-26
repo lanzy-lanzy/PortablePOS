@@ -24,7 +24,12 @@ interface SaleRepository {
     suspend fun updateSale(sale: Sale)
     suspend fun deleteSale(sale: Sale)
     fun getSaleItems(saleId: Long): Flow<List<SaleItem>>
-    suspend fun completeSale(sale: Sale, saleItems: List<SaleItem>, productStocks: Map<Long, Int>): Long
+    suspend fun completeSale(
+        sale: Sale,
+        saleItems: List<SaleItem>,
+        productStocks: Map<Long, Int>,
+        cashierName: String = "Cashier"
+    ): Long
 
     fun getBestSellingProducts(limit: Int = 10): Flow<List<SaleItem>>
 
