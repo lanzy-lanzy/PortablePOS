@@ -1,5 +1,6 @@
 package dev.ml.portablepos.domain.usecase
 
+import dev.ml.portablepos.domain.model.SaleItem
 import dev.ml.portablepos.domain.repository.ProductRepository
 import dev.ml.portablepos.domain.repository.SaleRepository
 import kotlinx.coroutines.flow.Flow
@@ -12,7 +13,8 @@ data class DashboardData(
     val todaySales: Double = 0.0,
     val transactionCount: Int = 0,
     val lowStockCount: Int = 0,
-    val totalProducts: Int = 0
+    val totalProducts: Int = 0,
+    val bestSellingProducts: List<SaleItem> = emptyList()
 )
 
 class GetDashboardDataUseCase @Inject constructor(
@@ -27,18 +29,21 @@ class GetDashboardDataUseCase @Inject constructor(
         val transactionCountFlow = saleRepository.getTransactionCountToday(todayStart, todayEnd)
         val lowStockCountFlow = productRepository.getLowStockProducts().map { it.size }
         val totalProductsFlow = productRepository.getTotalProductCount()
+        val bestSellingFlow = saleRepository.getBestSellingProducts(5)
 
         return combine(
             todaySalesFlow,
             transactionCountFlow,
             lowStockCountFlow,
-            totalProductsFlow
-        ) { todaySales, transactionCount, lowStockCount, totalProducts ->
+            totalProductsFlow,
+            bestSellingFlow
+        ) { todaySales, transactionCount, lowStockCount, totalProducts, bestSelling ->
             DashboardData(
                 todaySales = todaySales,
                 transactionCount = transactionCount,
                 lowStockCount = lowStockCount,
-                totalProducts = totalProducts
+                totalProducts = totalProducts,
+                bestSellingProducts = bestSelling
             )
         }
     }

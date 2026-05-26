@@ -81,6 +81,15 @@ class ReportsViewModel @Inject constructor(
                         }
                 }
                 launch {
+                    saleRepository.getBestSellingProducts(10)
+                        .catch { e ->
+                            _uiState.update { it.copy(error = e.message ?: "Failed to load best sellers") }
+                        }
+                        .collect { products ->
+                            _uiState.update { it.copy(bestSellingProducts = products) }
+                        }
+                }
+                launch {
                     productRepository.getLowStockProducts()
                         .catch { e ->
                             _uiState.update { it.copy(error = e.message ?: "Failed to load low stock") }
@@ -91,6 +100,20 @@ class ReportsViewModel @Inject constructor(
                                     lowStockProducts = products,
                                     isLoading = false
                                 )
+                            }
+                        }
+                }
+                launch {
+                    productRepository.getOutOfStockProducts()
+                        .catch { e ->
+                            _uiState.update { it.copy(error = e.message ?: "Failed to load out of stock") }
+                        }
+                        .collect { outOfStock ->
+                            _uiState.update { state ->
+                                val existing = state.lowStockProducts.toMutableList()
+                                val existingIds = existing.map { it.id }.toSet()
+                                val newOnes = outOfStock.filter { it.id !in existingIds }
+                                state.copy(lowStockProducts = existing + newOnes)
                             }
                         }
                 }

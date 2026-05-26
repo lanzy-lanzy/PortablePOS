@@ -25,6 +25,8 @@ interface SaleRepository {
     fun getSaleItems(saleId: Long): Flow<List<SaleItem>>
     suspend fun completeSale(sale: Sale, saleItems: List<SaleItem>, productStocks: Map<Long, Int>): Long
 
+    fun getBestSellingProducts(limit: Int = 10): Flow<List<SaleItem>>
+
     fun getReturnableItems(saleId: Long): Flow<List<SaleItem>>
 
     fun getAllReturnRecords(): Flow<List<ReturnRecord>>

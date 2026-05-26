@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Settings
@@ -61,6 +64,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import dev.ml.portablepos.domain.model.SaleItem
 import dev.ml.portablepos.presentation.components.ErrorMessage
 import dev.ml.portablepos.presentation.components.LoadingIndicator
 import dev.ml.portablepos.presentation.navigation.Screen
@@ -294,6 +298,14 @@ fun DashboardScreen(
                         }
                     }
 
+                    if (data.bestSellingProducts.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        BestSellingChartCard(
+                            products = data.bestSellingProducts,
+                            show = showContent
+                        )
+                    }
+
                     if (data.lowStockCount > 0) {
                         Spacer(modifier = Modifier.height(24.dp))
                         LowStockAlertCard(
@@ -500,6 +512,124 @@ private fun LowStockAlertCard(
                     tint = WarningOrange,
                     modifier = Modifier.size(20.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BestSellingChartCard(
+    products: List<SaleItem>,
+    show: Boolean
+) {
+    val animAlpha by animateFloatAsState(
+        targetValue = if (show) 1f else 0f,
+        animationSpec = tween(durationMillis = 600, delayMillis = 800)
+    )
+    val animTranslation by animateFloatAsState(
+        targetValue = if (show) 0f else 30f,
+        animationSpec = tween(durationMillis = 600, delayMillis = 800)
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .alpha(animAlpha)
+            .offset(y = animTranslation.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryBlue.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.BarChart,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    "Best Selling Products",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val maxQuantity = products.maxOf { it.quantity }
+            val barColor = PrimaryBlue
+
+            products.forEach { item ->
+                val fraction = if (maxQuantity > 0) item.quantity.toFloat() / maxQuantity else 0f
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.productName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF444444),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.width(100.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(20.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(fraction)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(barColor.copy(alpha = 0.2f))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(fraction.coerceAtLeast(0.02f))
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(barColor)
+                        )
+                        if (fraction < 0.15f) {
+                            Text(
+                                text = "${item.quantity}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF444444),
+                                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp)
+                            )
+                        }
+                    }
+                    if (fraction >= 0.15f) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "${item.quantity}",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = PrimaryBlue
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        tint = PrimaryBlue.copy(alpha = 0.5f),
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
             }
         }
     }

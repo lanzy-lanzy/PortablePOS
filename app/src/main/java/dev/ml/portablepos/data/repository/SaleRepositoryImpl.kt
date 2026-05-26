@@ -86,6 +86,9 @@ class SaleRepositoryImpl @Inject constructor(
         return saleId
     }
 
+    override fun getBestSellingProducts(limit: Int): Flow<List<SaleItem>> =
+        saleItemDao.getBestSellingProducts(limit).map { entities -> entities.map { it.toDomainModel() } }
+
     override fun getReturnableItems(saleId: Long): Flow<List<SaleItem>> =
         saleItemDao.getItemsBySaleId(saleId).map { entities ->
             entities.map { it.toDomainModel() }
